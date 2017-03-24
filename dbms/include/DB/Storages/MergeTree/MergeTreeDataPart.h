@@ -93,6 +93,9 @@ struct MergeTreeDataPart : public ActiveDataPartSet::Part
 	  */
 	String getColumnNameWithMinumumCompressedSize() const;
 
+	/// Returns full path to part dir
+	String getFullPath() const;
+
 	MergeTreeData & storage;
 
 	size_t size = 0;				/// in number of marks.

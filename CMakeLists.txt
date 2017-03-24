@@ -141,12 +141,14 @@ if (ENABLE_TESTS)
 endif (ENABLE_TESTS)
 
 # Installation prefix
-set (CMAKE_INSTALL_PREFIX /usr)
+message("CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}")
 if (NOT CMAKE_SYSTEM MATCHES "FreeBSD")
+	set (CMAKE_INSTALL_PREFIX /usr)
 	set (CLICKHOUSE_ETC_DIR /etc)
 else ()
 	set (CLICKHOUSE_ETC_DIR ${CMAKE_INSTALL_PREFIX}/etc)
 endif ()
+message("CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}")
 
 
 option (UNBUNDLED "Try find all libraries in system (if fail - use bundled from contrib/)" OFF)

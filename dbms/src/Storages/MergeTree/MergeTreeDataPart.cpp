@@ -317,6 +317,12 @@ String MergeTreeDataPart::getColumnNameWithMinumumCompressedSize() const
 }
 
 
+String MergeTreeDataPart::getFullPath() const
+{
+	return storage.full_path + name + "/";
+}
+
+
 MergeTreeDataPart::~MergeTreeDataPart()
 {
 	if (is_temp)
@@ -438,7 +444,7 @@ void MergeTreeDataPart::loadIndex()
 		if (columns.empty())
 			throw Exception("No columns in part " + name, ErrorCodes::NO_FILE_IN_DATA_PART);
 
-		size = Poco::File(storage.full_path + name + "/" + escapeForFileName(columns.front().name) + ".mrk")
+		size = Poco::File(getFullPath() + escapeForFileName(columns.front().name) + ".mrk")
 			.getSize() / MERGE_TREE_MARK_SIZE;
 	}
 
@@ -455,7 +461,7 @@ void MergeTreeDataPart::loadIndex()
 			index[i].get()->reserve(size);
 		}
 
-		String index_path = storage.full_path + name + "/primary.idx";
+		String index_path = getFullPath() + "primary.idx";
 		ReadBufferFromFile index_file(index_path,
 			std::min(static_cast<size_t>(DBMS_DEFAULT_BUFFER_SIZE), Poco::File(index_path).getSize()));
 
@@ -473,12 +479,12 @@ void MergeTreeDataPart::loadIndex()
 			throw Exception("Index file " + index_path + " is unexpectedly long", ErrorCodes::EXPECTED_END_OF_FILE);
 	}
 
-	size_in_bytes = calcTotalSize(storage.full_path + name + "/");
+	size_in_bytes = calcTotalSize(getFullPath());
 }
 
 void MergeTreeDataPart::loadChecksums(bool require)
 {
-	String path = storage.full_path + name + "/checksums.txt";
+	String path = getFullPath() + "checksums.txt";
 	if (!Poco::File(path).exists())
 	{
 		if (require)
@@ -495,13 +501,13 @@ void MergeTreeDataPart::accumulateColumnSizes(ColumnToSize & column_to_size) con
 {
 	Poco::ScopedReadRWLock part_lock(columns_lock);
 	for (const NameAndTypePair & column : *storage.columns)
-		if (Poco::File(storage.full_path + name + "/" + escapeForFileName(column.name) + ".bin").exists())
-			column_to_size[column.name] += Poco::File(storage.full_path + name + "/" + escapeForFileName(column.name) + ".bin").getSize();
+		if (Poco::File(getFullPath() + escapeForFileName(column.name) + ".bin").exists())
+			column_to_size[column.name] += Poco::File(getFullPath() + escapeForFileName(column.name) + ".bin").getSize();
 }
 
 void MergeTreeDataPart::loadColumns(bool require)
 {
-	String path = storage.full_path + name + "/columns.txt";
+	String path = getFullPath() + "columns.txt";
 	if (!Poco::File(path).exists())
 	{
 		if (require)
@@ -510,7 +516,7 @@ void MergeTreeDataPart::loadColumns(bool require)
 		/// If there is no file with a list of columns, write it down.
 		for (const NameAndTypePair & column : *storage.columns)
 		{
-			if (Poco::File(storage.full_path + name + "/" + escapeForFileName(column.name) + ".bin").exists())
+			if (Poco::File(getFullPath() + escapeForFileName(column.name) + ".bin").exists())
 				columns.push_back(column);
 		}
 
@@ -532,7 +538,7 @@ void MergeTreeDataPart::loadColumns(bool require)
 
 void MergeTreeDataPart::checkNotBroken(bool require_part_metadata)
 {
-	String path = storage.full_path + name;
+	String path = getFullPath();
 
 	if (!checksums.empty())
 	{
@@ -550,14 +556,14 @@ void MergeTreeDataPart::checkNotBroken(bool require_part_metadata)
 			}
 		}
 
-		checksums.checkSizes(path + "/");
+		checksums.checkSizes(path);
 	}
 	else
 	{
 		if (!storage.sort_descr.empty())
 		{
 			/// Check that the primary key is not empty.
-			Poco::File index_file(path + "/primary.idx");
+			Poco::File index_file(path + "primary.idx");
 
 			if (!index_file.exists() || index_file.getSize() == 0)
 				throw Exception("Part " + path + " is broken: primary key is empty.", ErrorCodes::BAD_SIZE_OF_FILE_IN_DATA_PART);
@@ -570,7 +576,7 @@ void MergeTreeDataPart::checkNotBroken(bool require_part_metadata)
 			ssize_t marks_size = -1;
 			for (const NameAndTypePair & it : columns)
 			{
-				Poco::File marks_file(path + "/" + escapeForFileName(it.name) + extension);
+				Poco::File marks_file(path + escapeForFileName(it.name) + extension);
 
 				/// When you add a new column to the table, the .mrk files are not created. We will not delete anything.
 				if (!marks_file.exists())

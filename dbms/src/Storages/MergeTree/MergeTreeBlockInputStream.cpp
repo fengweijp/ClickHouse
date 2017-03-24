@@ -16,15 +16,22 @@ namespace ErrorCodes
 MergeTreeBlockInputStream::~MergeTreeBlockInputStream() = default;
 
 
-MergeTreeBlockInputStream::MergeTreeBlockInputStream(const String & path_,	/// path to part
-	size_t block_size_, Names column_names,
-	MergeTreeData & storage_, const MergeTreeData::DataPartPtr & owned_data_part_,
-	const MarkRanges & mark_ranges_, bool use_uncompressed_cache_,
-	ExpressionActionsPtr prewhere_actions_, String prewhere_column_, bool check_columns,
-	size_t min_bytes_to_use_direct_io_, size_t max_read_buffer_size_,
-	bool save_marks_in_cache_, bool quiet)
+MergeTreeBlockInputStream::MergeTreeBlockInputStream(
+	MergeTreeData & storage_,
+	const MergeTreeData::DataPartPtr & owned_data_part_,
+	size_t block_size_,
+	Names column_names,
+	const MarkRanges & mark_ranges_,
+	bool use_uncompressed_cache_,
+	ExpressionActionsPtr prewhere_actions_,
+	String prewhere_column_,
+	bool check_columns,
+	size_t min_bytes_to_use_direct_io_,
+	size_t max_read_buffer_size_,
+	bool save_marks_in_cache_,
+	bool quiet)
 	:
-	path(path_), block_size(block_size_),
+	path(owned_data_part_->getFullPath()), block_size(block_size_),
 	storage(storage_), owned_data_part(owned_data_part_),
 	part_columns_lock(new Poco::ScopedReadRWLock(owned_data_part->columns_lock)),
 	all_mark_ranges(mark_ranges_), remaining_mark_ranges(mark_ranges_),

@@ -13,17 +13,25 @@ class MergeTreeReader;
 class UncompressedCache;
 class MarkCache;
 
-/// Для чтения из одного куска. Для чтения сразу из многих, Storage использует сразу много таких объектов.
+/// Used to read data from single part.
+/// To read data from multiple parts, a Storage creates multiple such objects.
 class MergeTreeBlockInputStream : public IProfilingBlockInputStream
 {
 public:
-	MergeTreeBlockInputStream(const String & path_,	/// Путь к куску
-		size_t block_size_, Names column_names,
-		MergeTreeData & storage_, const MergeTreeData::DataPartPtr & owned_data_part_,
-		const MarkRanges & mark_ranges_, bool use_uncompressed_cache_,
-		ExpressionActionsPtr prewhere_actions_, String prewhere_column_, bool check_columns,
-		size_t min_bytes_to_use_direct_io_, size_t max_read_buffer_size_,
-		bool save_marks_in_cache_, bool quiet = false);
+	MergeTreeBlockInputStream(
+		MergeTreeData & storage,
+		const MergeTreeData::DataPartPtr & owned_data_part,
+		size_t block_size,
+		Names column_names,
+		const MarkRanges & mark_ranges,
+		bool use_uncompressed_cache,
+		ExpressionActionsPtr prewhere_actions,
+		String prewhere_column,
+		bool check_columns,
+		size_t min_bytes_to_use_direct_io,
+		size_t max_read_buffer_size,
+		bool save_marks_in_cache,
+		bool quiet = false);
 
 	~MergeTreeBlockInputStream() override;
 
@@ -32,7 +40,7 @@ public:
 	String getID() const override;
 
 protected:
-	/// Будем вызывать progressImpl самостоятельно.
+	/// We will call progressImpl manually.
 	void progress(const Progress & value) override {}
 
 
